@@ -1,0 +1,6 @@
+{
+  "name": "CareerPilot AI",
+  "description": "AI-powered career assistant for the Indian job market featuring unified job search, ATS resume studio, mock interview coach, company intel, and application tracker.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
