@@ -189,3 +189,60 @@ export interface PrivacyConsents {
   policyVersion: string;
   lastUpdated: string;
 }
+
+export type AlertChannel = 'Email' | 'SMS' | 'Both';
+export type AlertFrequency = 'Instant' | 'Daily Digest' | 'Weekly Digest';
+
+export interface JobAlert {
+  id: string;
+  title: string;
+  keywords: string;
+  cities: JobLocation[];
+  minLpa: number;
+  noticePeriodMax: NoticePeriod;
+  wfhOnly: boolean;
+  channel: AlertChannel;
+  destination: string; // Email or +91 Phone
+  frequency: AlertFrequency;
+  active: boolean;
+  createdAt: string;
+  lastTriggeredAt?: string;
+  matchedCount: number;
+}
+
+export interface AlertNotificationLog {
+  id: string;
+  alertId: string;
+  title: string;
+  channel: AlertChannel;
+  destination: string;
+  timestamp: string;
+  jobsCount: number;
+  snippet: string;
+  status: 'Delivered' | 'Simulated via Twilio/Resend';
+}
+
+export type CalendarEventType = 'Interview Round' | 'Mock Practice' | 'Follow-up Reminder' | 'Offer Deadline';
+
+export interface CalendarEvent {
+  id: string;
+  applicationId?: string;
+  title: string;
+  company: string;
+  eventType: CalendarEventType;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:mm
+  durationMinutes: number;
+  locationOrUrl: string;
+  notes: string;
+  googleCalendarUrl?: string;
+  completed?: boolean;
+}
+
+export interface IndianPlatformLink {
+  platform: 'Naukri' | 'TimesJobs' | 'Foundit (Monster)' | 'Shine' | 'Freshersworld';
+  logoColor: string;
+  searchUrl: string;
+  tip: string;
+}
+

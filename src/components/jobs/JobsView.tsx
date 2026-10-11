@@ -48,6 +48,12 @@ export const JobsView: React.FC<JobsViewProps> = ({ onNavigateToTracker, initial
   const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
   const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
 
+  // Indian Job Platforms & Salary Calculator state
+  const [showSalaryCalc, setShowSalaryCalc] = useState(false);
+  const [calcLpa, setCalcLpa] = useState<number>(profile.minLpa || 18);
+  const [calcVariable, setCalcVariable] = useState<number>(10);
+  const [showIndianPortals, setShowIndianPortals] = useState(false);
+
   const cityOptions = [
     { label: "Bengaluru", value: "Bengaluru" },
     { label: "Hyderabad", value: "Hyderabad" },
@@ -147,11 +153,24 @@ export const JobsView: React.FC<JobsViewProps> = ({ onNavigateToTracker, initial
           </p>
         </div>
 
-        {/* Sort & Quick Counter */}
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-            Showing <strong className="text-slate-900 dark:text-white">{jobs.length}</strong> roles
-          </span>
+        {/* Sort & Quick Counter & Feature Buttons */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() => setShowIndianPortals(true)}
+            className="px-3 py-2 text-xs font-semibold rounded-xl bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 text-[#3B3FD8] dark:text-indigo-300 hover:bg-[#3B3FD8] hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>Naukri / TimesJobs Links</span>
+          </button>
+
+          <button
+            onClick={() => setShowSalaryCalc(true)}
+            className="px-3 py-2 text-xs font-semibold rounded-xl bg-amber-50 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-[#FFB020] hover:bg-[#FFB020] hover:text-[#0B1437] transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+          >
+            <DollarSign className="w-3.5 h-3.5" />
+            <span>LPA In-Hand Calculator</span>
+          </button>
+
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
@@ -641,6 +660,202 @@ export const JobsView: React.FC<JobsViewProps> = ({ onNavigateToTracker, initial
                 Apply Now
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Indian Job Platforms Direct Link-Out Modal */}
+      {showIndianPortals && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-2xl bg-white dark:bg-[#111C44] rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                  <ExternalLink className="w-5 h-5 text-[#3B3FD8]" /> Indian Job Platforms Integration
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Pre-configured deep query links for {searchQuery || profile.targetRoles[0] || "Full Stack Developer"} in {selectedCities[0] || "Hyderabad"}.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowIndianPortals(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {api
+                .getIndianPlatformLinks({
+                  role: searchQuery || profile.targetRoles[0] || "Full Stack Developer",
+                  city: selectedCities[0] || "Hyderabad",
+                  expYears: profile.experienceYears,
+                  minLpa: minLpa,
+                })
+                .map((portal) => (
+                  <div
+                    key={portal.platform}
+                    className="p-4 rounded-2xl bg-slate-50 dark:bg-[#0B1437] border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-[#3B3FD8]/50 transition-all"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: portal.logoColor }}
+                        />
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                          {portal.platform}
+                        </h4>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                        {portal.tip}
+                      </p>
+                    </div>
+
+                    <a
+                      href={portal.searchUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-[#3B3FD8] hover:text-white dark:hover:bg-[#3B3FD8] text-xs font-semibold text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5 shrink-0 self-start sm:self-center"
+                    >
+                      <span>Search on {portal.platform}</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                ))}
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 text-xs text-slate-600 dark:text-slate-300">
+              <strong>Viva Architecture Note:</strong> As documented in the project brief FAQ, portals like Naukri and TimesJobs have restricted personal API access. CareerPilot ethically provides deep parameters, respecting robot rules without illegal backend scraping.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Indian LPA Salary Breakdown & In-Hand Calculator Modal */}
+      {showSalaryCalc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-xl bg-white dark:bg-[#111C44] rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-emerald-500" /> Indian LPA Salary & In-Hand Calculator
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  New Tax Regime (Section 115BAC for FY 2026-27), EPF (12%), and Professional Tax.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowSalaryCalc(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Controls */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Total CTC in LPA (₹): <strong className="text-[#3B3FD8]">{calcLpa} LPA</strong>
+                </label>
+                <input
+                  type="range"
+                  min={5}
+                  max={45}
+                  step={1}
+                  value={calcLpa}
+                  onChange={(e) => setCalcLpa(Number(e.target.value))}
+                  className="w-full accent-[#3B3FD8]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Variable / Bonus %: <strong className="text-amber-500">{calcVariable}%</strong>
+                </label>
+                <input
+                  type="range"
+                  min={0}
+                  max={30}
+                  step={5}
+                  value={calcVariable}
+                  onChange={(e) => setCalcVariable(Number(e.target.value))}
+                  className="w-full accent-[#FFB020]"
+                />
+              </div>
+            </div>
+
+            {/* Computed Breakdown */}
+            {(() => {
+              const breakdown = api.calculateIndianSalaryBreakdown(calcLpa, calcVariable);
+              return (
+                <div className="space-y-4">
+                  {/* Big Take-Home Pill */}
+                  <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-semibold text-emerald-100 uppercase tracking-wider block">
+                        Estimated Monthly In-Hand (Take Home)
+                      </span>
+                      <span className="text-3xl font-extrabold">
+                        ₹{breakdown.monthlyInHand.toLocaleString("en-IN")}
+                        <span className="text-sm font-normal text-emerald-100"> / month</span>
+                      </span>
+                    </div>
+                    <div className="text-right text-xs text-emerald-100">
+                      <div>Fixed CTC: ₹{breakdown.fixedCtcLpa} LPA</div>
+                      <div>Variable: ₹{breakdown.variableAmountAnnual.toLocaleString("en-IN")}/yr</div>
+                    </div>
+                  </div>
+
+                  {/* Deduction Table */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#0B1437] border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+                    <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-800">
+                      <span className="text-slate-600 dark:text-slate-400">Monthly Gross Salary (Fixed)</span>
+                      <span className="font-bold text-slate-900 dark:text-white">
+                        ₹{breakdown.monthlyGross.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-800">
+                      <span className="text-slate-600 dark:text-slate-400">Employee EPF Deduction (12% of Basic)</span>
+                      <span className="font-bold text-rose-500">
+                        - ₹{breakdown.employeePfMonthly.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-800">
+                      <span className="text-slate-600 dark:text-slate-400">Professional Tax (Telangana / Karnataka)</span>
+                      <span className="font-bold text-rose-500">
+                        - ₹{breakdown.professionalTaxMonthly}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-800">
+                      <span className="text-slate-600 dark:text-slate-400">Estimated Income Tax / TDS (Monthly)</span>
+                      <span className="font-bold text-rose-500">
+                        - ₹{breakdown.monthlyTds.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between py-1 pt-2 font-bold text-slate-900 dark:text-white">
+                      <span>Annual Estimated Tax (New Regime)</span>
+                      <span className="text-[#3B3FD8] dark:text-indigo-400">
+                        ₹{breakdown.annualTax.toLocaleString("en-IN")} / year
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <button
+              onClick={() => setShowSalaryCalc(false)}
+              className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer"
+            >
+              Close Calculator
+            </button>
           </div>
         </div>
       )}

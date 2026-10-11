@@ -13,6 +13,9 @@ import {
   MapPin,
   Clock,
   Sparkles,
+  Bell,
+  Calendar,
+  BookOpen,
 } from "lucide-react";
 import Logo from "./Logo";
 import { useAuth } from "../context/AuthContext";
@@ -36,12 +39,15 @@ export const navItems: NavItem[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "chat", label: "AI Career Copilot", icon: MessageSquare, badge: "Gemini", badgeColor: "bg-[#3B3FD8]/15 text-[#3B3FD8] dark:text-indigo-300" },
   { id: "jobs", label: "Unified Job Search", icon: Briefcase, badge: "30 Live", badgeColor: "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" },
+  { id: "alerts", label: "Job Alerts (Email/SMS)", icon: Bell, badge: "Twilio", badgeColor: "bg-[#FFB020]/20 text-amber-700 dark:text-[#FFB020]" },
+  { id: "calendar", label: "Interview Calendar", icon: Calendar, badge: "Sync", badgeColor: "bg-indigo-100 dark:bg-indigo-950 text-[#3B3FD8] dark:text-indigo-300" },
   { id: "resume", label: "Resume Studio", icon: FileText, badge: "ATS 92", badgeColor: "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300" },
   { id: "company", label: "Company Intel", icon: Building2 },
   { id: "interview", label: "Interview Coach", icon: Mic, badge: "Voice AI", badgeColor: "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300" },
   { id: "tracker", label: "Application Tracker", icon: Kanban },
-  { id: "analytics", label: "Market Analytics", icon: BarChart3 },
+  { id: "analytics", label: "Job Search Analytics", icon: BarChart3 },
   { id: "privacy", label: "Privacy & Consent", icon: ShieldCheck },
+  { id: "docs", label: "API Docs & Blog", icon: BookOpen, badge: "OpenAPI", badgeColor: "bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300" },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({

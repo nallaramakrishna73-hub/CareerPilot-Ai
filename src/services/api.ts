@@ -8,6 +8,10 @@ import {
   UserProfile,
   PrivacyConsents,
   JobMatchBreakdown,
+  JobAlert,
+  AlertNotificationLog,
+  CalendarEvent,
+  IndianPlatformLink,
 } from "../types";
 import { mockJobs } from "../data/mockJobs";
 import { getCompanyIntelByName } from "../data/mockCompanies";
@@ -302,6 +306,402 @@ export const api = {
   // === COMPANY INTEL ===
   async getCompanyIntel(companyName: string): Promise<CompanyIntel> {
     return getCompanyIntelByName(companyName);
+  },
+
+  // === JOB ALERTS SERVICE ===
+  async getAlerts(): Promise<JobAlert[]> {
+    const saved = localStorage.getItem("careerpilot_alerts");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    const defaultAlerts: JobAlert[] = [
+      {
+        id: "alert-1",
+        title: "Hyderabad & Bengaluru Senior Backend (16+ LPA)",
+        keywords: "Node.js, PostgreSQL, Distributed Systems",
+        cities: ["Hyderabad", "Bengaluru"],
+        minLpa: 16,
+        noticePeriodMax: 30,
+        wfhOnly: false,
+        channel: "Both",
+        destination: "nallaramakrishna73@gmail.com / +91 98480 12345",
+        frequency: "Instant",
+        active: true,
+        createdAt: "09 Oct 2026",
+        lastTriggeredAt: "Today at 02:30 PM",
+        matchedCount: 8,
+      },
+      {
+        id: "alert-2",
+        title: "Immediate Joiner / Tier-2 IT Hubs (15-30d notice)",
+        keywords: "Full Stack, React, Node.js",
+        cities: ["Warangal", "Nirmal", "Pune"],
+        minLpa: 8,
+        noticePeriodMax: 30,
+        wfhOnly: true,
+        channel: "Email",
+        destination: "nallaramakrishna73@gmail.com",
+        frequency: "Daily Digest",
+        active: true,
+        createdAt: "10 Oct 2026",
+        lastTriggeredAt: "Yesterday at 09:00 AM",
+        matchedCount: 5,
+      },
+    ];
+    localStorage.setItem("careerpilot_alerts", JSON.stringify(defaultAlerts));
+    return defaultAlerts;
+  },
+
+  async saveAlerts(alerts: JobAlert[]): Promise<void> {
+    localStorage.setItem("careerpilot_alerts", JSON.stringify(alerts));
+  },
+
+  async createAlert(alertData: Omit<JobAlert, "id" | "createdAt" | "matchedCount">): Promise<JobAlert> {
+    const alerts = await this.getAlerts();
+    const newAlert: JobAlert = {
+      ...alertData,
+      id: "alert-" + Date.now(),
+      createdAt: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+      matchedCount: Math.floor(Math.random() * 6) + 3,
+    };
+    const updated = [newAlert, ...alerts];
+    await this.saveAlerts(updated);
+    return newAlert;
+  },
+
+  async toggleAlert(id: string): Promise<JobAlert[]> {
+    const alerts = await this.getAlerts();
+    const updated = alerts.map((a) => (a.id === id ? { ...a, active: !a.active } : a));
+    await this.saveAlerts(updated);
+    return updated;
+  },
+
+  async deleteAlert(id: string): Promise<JobAlert[]> {
+    const alerts = await this.getAlerts();
+    const updated = alerts.filter((a) => a.id !== id);
+    await this.saveAlerts(updated);
+    return updated;
+  },
+
+  async getAlertLogs(): Promise<AlertNotificationLog[]> {
+    const saved = localStorage.getItem("careerpilot_alert_logs");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    const defaultLogs: AlertNotificationLog[] = [
+      {
+        id: "log-1",
+        alertId: "alert-1",
+        title: "Swiggy Logistics: Backend Platform Engineer (18-28 LPA)",
+        channel: "Both",
+        destination: "nallaramakrishna73@gmail.com / +91 98480 12345",
+        timestamp: "Today at 02:30 PM",
+        jobsCount: 2,
+        snippet: "New opening matched: 92% fit score, 30 days notice required in Hyderabad (Remote-friendly).",
+        status: "Delivered",
+      },
+      {
+        id: "log-2",
+        alertId: "alert-1",
+        title: "Razorpay Payments: Senior Full Stack Engineer (22-34 LPA)",
+        channel: "Email",
+        destination: "nallaramakrishna73@gmail.com",
+        timestamp: "Yesterday at 06:15 PM",
+        jobsCount: 1,
+        snippet: "95% match with your master resume. Core skills: React, Node.js, PostgreSQL.",
+        status: "Delivered",
+      },
+      {
+        id: "log-3",
+        alertId: "alert-2",
+        title: "Daily Digest: 3 Tier-2 & Remote Full Stack Openings",
+        channel: "SMS",
+        destination: "+91 98480 12345",
+        timestamp: "Yesterday at 09:00 AM",
+        jobsCount: 3,
+        snippet: "Kakatiya Tech Labs (Warangal) and Godavari Digital (Nirmal) are hiring immediate joiners.",
+        status: "Delivered",
+      },
+    ];
+    localStorage.setItem("careerpilot_alert_logs", JSON.stringify(defaultLogs));
+    return defaultLogs;
+  },
+
+  async triggerAlertNow(alertId: string): Promise<AlertNotificationLog> {
+    const alerts = await this.getAlerts();
+    const alert = alerts.find((a) => a.id === alertId);
+    const logs = await this.getAlertLogs();
+
+    const newLog: AlertNotificationLog = {
+      id: "log-" + Date.now(),
+      alertId: alertId,
+      title: `⚡ Manual Dispatch: ${alert ? alert.title : "Matching Jobs"}`,
+      channel: alert?.channel || "Both",
+      destination: alert?.destination || "nallaramakrishna73@gmail.com",
+      timestamp: "Just now",
+      jobsCount: Math.floor(Math.random() * 4) + 2,
+      snippet: `Dispatched instant digest containing 3 live openings meeting ${alert?.minLpa || 15}+ LPA criteria via Twilio SMS and Resend Email service.`,
+      status: "Delivered",
+    };
+
+    const updatedLogs = [newLog, ...logs];
+    localStorage.setItem("careerpilot_alert_logs", JSON.stringify(updatedLogs));
+
+    // Update alert's last triggered
+    if (alert) {
+      alert.lastTriggeredAt = "Just now";
+      await this.saveAlerts(alerts);
+    }
+
+    return newLog;
+  },
+
+  // === CALENDAR & INTERVIEW SCHEDULING SERVICE ===
+  async getCalendarEvents(): Promise<CalendarEvent[]> {
+    const saved = localStorage.getItem("careerpilot_calendar_events");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    const defaultEvents: CalendarEvent[] = [
+      {
+        id: "cal-1",
+        applicationId: "app-1",
+        title: "High-Level System Design Round (Razorpay)",
+        company: "Razorpay",
+        eventType: "Interview Round",
+        date: "2026-10-14",
+        time: "16:00",
+        durationMinutes: 60,
+        locationOrUrl: "https://meet.google.com/abc-razorpay-tech",
+        notes: "Prepare Rate Limiter, Redis caching, and double-entry ledger database schema.",
+        completed: false,
+      },
+      {
+        id: "cal-2",
+        title: "Mock Interview: STAR Behavioral & Outage Debugging",
+        company: "CareerPilot AI",
+        eventType: "Mock Practice",
+        date: "2026-10-12",
+        time: "11:00",
+        durationMinutes: 45,
+        locationOrUrl: "In-App Voice Coach",
+        notes: "Targeting 85%+ score on 4-pillar rubric (Relevance, STAR structure, Tech Depth, Clarity).",
+        completed: false,
+      },
+      {
+        id: "cal-3",
+        applicationId: "app-2",
+        title: "Follow-up with Recruiter on Resume Review (Swiggy)",
+        company: "Swiggy",
+        eventType: "Follow-up Reminder",
+        date: "2026-10-16",
+        time: "10:30",
+        durationMinutes: 15,
+        locationOrUrl: "LinkedIn / Email",
+        notes: "Send respectful 5-day polite check-in email referencing application id SW-4981.",
+        completed: false,
+      },
+      {
+        id: "cal-4",
+        applicationId: "app-4",
+        title: "Freshworks Offer Letter Decision Deadline",
+        company: "Freshworks",
+        eventType: "Offer Deadline",
+        date: "2026-10-18",
+        time: "17:00",
+        durationMinutes: 30,
+        locationOrUrl: "HR Call",
+        notes: "Evaluate counter-offer negotiation using CareerPilot Indian LPA benchmark (target: 21 LPA).",
+        completed: false,
+      },
+    ];
+    localStorage.setItem("careerpilot_calendar_events", JSON.stringify(defaultEvents));
+    return defaultEvents;
+  },
+
+  async saveCalendarEvents(events: CalendarEvent[]): Promise<void> {
+    localStorage.setItem("careerpilot_calendar_events", JSON.stringify(events));
+  },
+
+  async addCalendarEvent(eventData: Omit<CalendarEvent, "id">): Promise<CalendarEvent> {
+    const events = await this.getCalendarEvents();
+    const newEvent: CalendarEvent = {
+      ...eventData,
+      id: "cal-" + Date.now(),
+    };
+    const updated = [...events, newEvent];
+    await this.saveCalendarEvents(updated);
+    return newEvent;
+  },
+
+  async updateCalendarEvent(id: string, updates: Partial<CalendarEvent>): Promise<CalendarEvent[]> {
+    const events = await this.getCalendarEvents();
+    const updated = events.map((e) => (e.id === id ? { ...e, ...updates } : e));
+    await this.saveCalendarEvents(updated);
+    return updated;
+  },
+
+  async deleteCalendarEvent(id: string): Promise<CalendarEvent[]> {
+    const events = await this.getCalendarEvents();
+    const updated = events.filter((e) => e.id !== id);
+    await this.saveCalendarEvents(updated);
+    return updated;
+  },
+
+  generateGoogleCalendarUrl(event: CalendarEvent): string {
+    // Format dates in UTC YYYYMMDDTHHMMSSZ (assuming Indian Standard Time IST UTC+5:30)
+    const [year, month, day] = event.date.split("-").map(Number);
+    const [hours, mins] = event.time.split(":").map(Number);
+    // Create Date object in local context
+    const startDate = new Date(year, month - 1, day, hours, mins);
+    const endDate = new Date(startDate.getTime() + event.durationMinutes * 60000);
+
+    const pad = (n: number) => (n < 10 ? "0" + n : n.toString());
+    const toIsoCompact = (d: Date) =>
+      `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+
+    const dates = `${toIsoCompact(startDate)}/${toIsoCompact(endDate)}`;
+    const details = encodeURIComponent(
+      `Company: ${event.company}\nType: ${event.eventType}\nPrep Notes: ${event.notes}\nMeeting Link: ${event.locationOrUrl}\n\nScheduled via CareerPilot AI`
+    );
+    const text = encodeURIComponent(`[CareerPilot] ${event.title}`);
+    const location = encodeURIComponent(event.locationOrUrl);
+
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${dates}&details=${details}&location=${location}`;
+  },
+
+  generateIcsFile(event: CalendarEvent): void {
+    const [year, month, day] = event.date.split("-").map(Number);
+    const [hours, mins] = event.time.split(":").map(Number);
+    const startDate = new Date(year, month - 1, day, hours, mins);
+    const endDate = new Date(startDate.getTime() + event.durationMinutes * 60000);
+
+    const pad = (n: number) => (n < 10 ? "0" + n : n.toString());
+    const toIsoCompact = (d: Date) =>
+      `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+
+    const icsContent = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//CareerPilot AI//Job Search Copilot//EN",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      "BEGIN:VEVENT",
+      `UID:${event.id}@careerpilot.ai`,
+      `DTSTAMP:${toIsoCompact(new Date())}`,
+      `DTSTART:${toIsoCompact(startDate)}`,
+      `DTEND:${toIsoCompact(endDate)}`,
+      `SUMMARY:${event.title}`,
+      `DESCRIPTION:${event.notes} - Company: ${event.company}`,
+      `LOCATION:${event.locationOrUrl}`,
+      "STATUS:CONFIRMED",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\r\n");
+
+    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${event.title.replace(/[^a-zA-Z0-9]/g, "_")}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
+  // === INDIAN JOB PLATFORMS LINK-OUT GENERATOR ===
+  getIndianPlatformLinks(params: { role: string; city: string; expYears?: number; minLpa?: number }): IndianPlatformLink[] {
+    const q = encodeURIComponent(params.role || "Full Stack Developer");
+    const city = encodeURIComponent(params.city || "Hyderabad");
+    const exp = params.expYears || 2;
+
+    return [
+      {
+        platform: "Naukri",
+        logoColor: "#0A46F4",
+        searchUrl: `https://www.naukri.com/${q.toLowerCase()}-jobs-in-${city.toLowerCase()}?k=${q}&l=${city}&experience=${exp}`,
+        tip: "India's highest recruiter reach. Best for active recruiter search indexing and fast responses.",
+      },
+      {
+        platform: "TimesJobs",
+        logoColor: "#C91F26",
+        searchUrl: `https://www.timesjobs.com/candidate/job-search.html?searchType=personalizedSearch&from=submit&txtKeywords=${q}&txtLocation=${city}`,
+        tip: "Popular for established Indian MNCs, banking tech divisions, and IT services firms.",
+      },
+      {
+        platform: "Foundit (Monster)",
+        logoColor: "#6C19E8",
+        searchUrl: `https://www.foundit.in/srp/results?query=${q}&locations=${city}`,
+        tip: "Strong in Bangalore, Hyderabad, and Pune tech mid-market startups and product companies.",
+      },
+      {
+        platform: "Shine",
+        logoColor: "#009688",
+        searchUrl: `https://www.shine.com/job-search/${q.toLowerCase()}-jobs-in-${city.toLowerCase()}`,
+        tip: "Good for rapid phone screen calls and verified consultancies across North and South India.",
+      },
+      {
+        platform: "Freshersworld",
+        logoColor: "#FF5722",
+        searchUrl: `https://www.freshersworld.com/jobs/jobsearch/${q.toLowerCase()}-jobs-in-${city.toLowerCase()}`,
+        tip: "Tailored for freshers, 0-2 yrs candidates, off-campus drives, and Tier-2 engineering graduates.",
+      },
+    ];
+  },
+
+  // === INDIAN LPA SALARY BREAKDOWN CALCULATOR ===
+  calculateIndianSalaryBreakdown(ctcLpa: number, variablePercent: number = 10) {
+    const totalRupees = ctcLpa * 100000;
+    const variableAmount = (totalRupees * variablePercent) / 100;
+    const fixedCtc = totalRupees - variableAmount;
+
+    // Standard Indian salary structuring
+    const basicAnnual = fixedCtc * 0.40; // 40% of fixed
+    const hraAnnual = basicAnnual * 0.40; // 40% of basic
+    const specialAllowanceAnnual = fixedCtc - basicAnnual - hraAnnual;
+
+    // Monthly EPF deduction (12% of basic, capped or full)
+    const employeePfMonthly = Math.round((basicAnnual / 12) * 0.12);
+    const professionalTaxMonthly = 200; // Standard in Telangana & Karnataka
+
+    // New Tax Regime (FY 2026-27 under Section 115BAC):
+    // Standard deduction: ₹75,000
+    const taxableIncome = Math.max(0, fixedCtc - 75000 - (employeePfMonthly * 12));
+    let annualTax = 0;
+    if (taxableIncome > 1500000) {
+      annualTax = 150000 + (taxableIncome - 1500000) * 0.30;
+    } else if (taxableIncome > 1200000) {
+      annualTax = 90000 + (taxableIncome - 1200000) * 0.20;
+    } else if (taxableIncome > 900000) {
+      annualTax = 45000 + (taxableIncome - 900000) * 0.15;
+    } else if (taxableIncome > 600000) {
+      annualTax = 15000 + (taxableIncome - 600000) * 0.10;
+    } else if (taxableIncome > 300000) {
+      annualTax = (taxableIncome - 300000) * 0.05;
+    }
+    // 4% Health & Education cess
+    annualTax = Math.round(annualTax * 1.04);
+    const monthlyTds = Math.round(annualTax / 12);
+
+    const monthlyGross = Math.round(fixedCtc / 12);
+    const monthlyInHand = Math.max(0, monthlyGross - employeePfMonthly - professionalTaxMonthly - monthlyTds);
+
+    return {
+      ctcLpa,
+      fixedCtcLpa: Math.round((fixedCtc / 100000) * 10) / 10,
+      variableAmountAnnual: Math.round(variableAmount),
+      monthlyGross,
+      monthlyInHand,
+      employeePfMonthly,
+      professionalTaxMonthly,
+      monthlyTds,
+      annualTax,
+    };
   },
 
   // === PRIVACY & CONSENT ===

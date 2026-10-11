@@ -14,6 +14,9 @@ import InterviewCoachView from "./components/interview/InterviewCoachView";
 import TrackerView from "./components/tracker/TrackerView";
 import AnalyticsView from "./components/analytics/AnalyticsView";
 import PrivacyCenterView from "./components/privacy/PrivacyCenterView";
+import JobAlertsView from "./components/alerts/JobAlertsView";
+import CalendarView from "./components/calendar/CalendarView";
+import DocsAndBlogView from "./components/docs/DocsAndBlogView";
 
 function MainApp() {
   const { user, profile, loading } = useAuth();
@@ -95,8 +98,11 @@ function MainApp() {
           {activeTab === "company" && <CompanyIntelView />}
           {activeTab === "interview" && <InterviewCoachView />}
           {activeTab === "tracker" && <TrackerView />}
+          {activeTab === "alerts" && <JobAlertsView />}
+          {activeTab === "calendar" && <CalendarView />}
           {activeTab === "analytics" && <AnalyticsView />}
           {activeTab === "privacy" && <PrivacyCenterView />}
+          {activeTab === "docs" && <DocsAndBlogView />}
         </main>
       </div>
     </div>
