@@ -95,11 +95,6 @@ npm run dev
 
 Use the appropriate command from your project's "package.json" or setup instructions.
 
-6. Open the Application
-
-Open the local URL displayed in your terminal. A common development address is:
-
-http://localhost:5173
 
 The actual address depends on your development framework and configuration.
 
